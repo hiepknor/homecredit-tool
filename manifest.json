@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Home Credit Installment Calculator",
+  "version": "1.0.0",
+  "description": "Tính nhanh khoản vay trả góp Home Credit với lãi phẳng hoặc dư nợ giảm dần.",
+  "permissions": [
+    "storage"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Tính trả góp Home Credit"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
