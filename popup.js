@@ -1,6 +1,6 @@
 const DEFAULT_STATE = {
   price: 15000000,
-  downPaymentPercent: 30,
+  downPaymentAmount: 3000000,
   monthlyRate: 2.5,
   months: 6,
   extraFees: 0,
@@ -18,7 +18,7 @@ const elements = {};
 document.addEventListener('DOMContentLoaded', () => {
   [
     'price',
-    'downPercent',
+    'downPayment',
     'monthlyRate',
     'months',
     'extraFees',
@@ -48,7 +48,7 @@ function formatCurrency(value) {
 
 function loadState() {
   chrome.storage.sync.get(['homeCreditCalc'], (data) => {
-    const state = { ...DEFAULT_STATE, ...(data.homeCreditCalc || {}) };
+    const state = normalizeState({ ...DEFAULT_STATE, ...(data.homeCreditCalc || {}) });
     setInputs(state);
     updateStateFromInputs(state);
     calculate(state);
@@ -56,9 +56,25 @@ function loadState() {
   });
 }
 
+function normalizeState(state) {
+  if (state.downPaymentPercent !== undefined && state.downPaymentAmount === undefined) {
+    state.downPaymentAmount = Math.min(
+      state.price,
+      Math.max(0, (state.price * state.downPaymentPercent) / 100)
+    );
+    delete state.downPaymentPercent;
+  }
+
+  if (!Number.isFinite(state.downPaymentAmount)) {
+    state.downPaymentAmount = 0;
+  }
+
+  return state;
+}
+
 function setInputs(state) {
   elements.price.value = state.price;
-  elements.downPercent.value = state.downPaymentPercent;
+  elements.downPayment.value = state.downPaymentAmount;
   elements.monthlyRate.value = state.monthlyRate;
   elements.months.value = state.months;
   elements.extraFees.value = state.extraFees;
@@ -66,7 +82,7 @@ function setInputs(state) {
 }
 
 function attachListeners(state) {
-  const inputs = ['price', 'downPercent', 'monthlyRate', 'months', 'extraFees'];
+  const inputs = ['price', 'downPayment', 'monthlyRate', 'months', 'extraFees'];
   inputs.forEach((id) => {
     elements[id].addEventListener('input', () => {
       updateStateFromInputs(state);
@@ -84,9 +100,9 @@ function attachListeners(state) {
 
 function updateStateFromInputs(state) {
   state.price = Math.max(0, toNumber(elements.price.value));
-  state.downPaymentPercent = Math.min(
-    99,
-    Math.max(0, toNumber(elements.downPercent.value))
+  state.downPaymentAmount = Math.max(
+    0,
+    Math.min(state.price, toNumber(elements.downPayment.value))
   );
   state.monthlyRate = Math.max(0, toNumber(elements.monthlyRate.value));
   state.months = Math.min(
@@ -97,7 +113,7 @@ function updateStateFromInputs(state) {
 
   // Normalize inputs in the UI to keep things tidy
   elements.price.value = state.price;
-  elements.downPercent.value = state.downPaymentPercent;
+  elements.downPayment.value = state.downPaymentAmount;
   elements.monthlyRate.value = state.monthlyRate;
   elements.months.value = state.months;
   elements.extraFees.value = state.extraFees;
@@ -108,7 +124,7 @@ function saveState(state) {
 }
 
 function calculate(state) {
-  const { price, downPaymentPercent, monthlyRate, months, extraFees, method } =
+  const { price, downPaymentAmount, monthlyRate, months, extraFees, method } =
     state;
 
   if (!price || !months) {
@@ -116,7 +132,7 @@ function calculate(state) {
     return;
   }
 
-  const downPayment = Math.min(price, (price * downPaymentPercent) / 100);
+  const downPayment = Math.min(price, downPaymentAmount);
   const principal = Math.max(price - downPayment + extraFees, 0);
 
   const calculation =
