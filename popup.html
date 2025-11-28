@@ -21,10 +21,10 @@
 
     body {
       font-family: 'Space Grotesk', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
-      width: min(1250px, 100vw);
-      min-width: 640px;
+      width: min(1400px, 100vw);
+      min-width: 680px;
       margin: 0 auto;
-      padding: 32px;
+      padding: 34px;
       color: #e2e8f0;
       background: radial-gradient(circle at 18% 18%, rgba(59, 130, 246, 0.18), transparent 32%),
         radial-gradient(circle at 82% 12%, rgba(249, 115, 22, 0.14), transparent 34%),
@@ -34,7 +34,7 @@
     .wrap {
       position: relative;
       z-index: 2;
-      max-width: 1250px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
@@ -213,6 +213,12 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.18);
       outline: none;
+    }
+
+    input[readonly] {
+      cursor: not-allowed;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .input-grid {
@@ -396,6 +402,15 @@
       margin-top: 10px;
     }
 
+    .signature {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: rgba(226, 232, 240, 0.6);
+      text-transform: uppercase;
+    }
+
     .toast {
       position: fixed;
       left: 50%;
@@ -417,9 +432,9 @@
       opacity: 1;
     }
 
-    @media (max-width: 1020px) {
+    @media (max-width: 1160px) {
       body {
-        width: min(820px, 100vw);
+        width: min(900px, 100vw);
         min-width: 520px;
         padding: 24px;
       }
@@ -526,9 +541,9 @@
         <div>
           <div class="label-row">
             <label for="monthlyRate">Lãi suất / tháng (%)</label>
-            <span class="label-spacer" aria-hidden="true"></span>
+            <span class="muted" id="rateTimestamp"></span>
           </div>
-          <input id="monthlyRate" type="number" min="0" step="0.01" />
+          <input id="monthlyRate" type="number" min="0" step="0.01" readonly />
         </div>
         <div>
           <div class="label-row">
@@ -540,9 +555,9 @@
         <div>
           <div class="label-row">
             <label for="extraFees">Phí hồ sơ/bảo hiểm (VND)</label>
-            <span class="label-spacer" aria-hidden="true"></span>
+            <span class="muted" id="feeTimestamp"></span>
           </div>
-          <input id="extraFees" type="text" inputmode="numeric" placeholder="vd: 500.000" />
+          <input id="extraFees" type="text" inputmode="numeric" placeholder="vd: 500.000" readonly />
         </div>
       </div>
 
@@ -577,6 +592,8 @@
       </div>
       <p class="muted">Hiển thị tối đa 12 kỳ đầu; các kỳ sau vẫn được tính để ra kết quả tổng.</p>
     </div>
+
+    <p class="signature">Design by Hiep Mai</p>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>

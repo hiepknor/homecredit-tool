@@ -1,6 +1,15 @@
 const MAX_MONTHS = 120;
 const DOWN_PAYMENT_PERCENT_MAX = 95;
 const PRESET_ACTIVE_TIMEOUT = 1800;
+const DAILY_DEFAULTS = [
+  { rate: 2.45, fee: 250000 },
+  { rate: 2.35, fee: 200000 },
+  { rate: 2.28, fee: 180000 },
+  { rate: 2.2, fee: 150000 },
+  { rate: 2.25, fee: 220000 },
+  { rate: 2.15, fee: 300000 },
+  { rate: 2.4, fee: 180000 }
+];
 
 const DEFAULT_STATE = {
   price: 15000000,
@@ -43,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'downPaymentNote',
     'downPaymentToggle',
     'downPaymentHelper',
+    'rateTimestamp',
+    'feeTimestamp',
     'scheduleBody',
     'methodHint',
     'insight',
@@ -62,6 +73,7 @@ function loadState() {
   chrome.storage.sync.get(['homeCreditCalc'], (data) => {
     const persisted = data.homeCreditCalc || {};
     const state = normalizeState({ ...DEFAULT_STATE, ...persisted });
+    applyDailyDefaults(state);
     setInputs(state);
     updateStateFromInputs(state);
     calculate(state);
@@ -91,6 +103,27 @@ function normalizeState(state) {
   return state;
 }
 
+function applyDailyDefaults(state) {
+  const now = new Date();
+  const defaults = DAILY_DEFAULTS[now.getDay()] || DAILY_DEFAULTS[0];
+  state.monthlyRate = defaults.rate;
+  state.extraFees = defaults.fee;
+  const dateLabel = now.toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+  const timeLabel = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  const text = `Cập nhật ${dateLabel} lúc ${timeLabel}`;
+  if (elements.rateTimestamp) {
+    elements.rateTimestamp.textContent = text;
+  }
+  if (elements.feeTimestamp) {
+    elements.feeTimestamp.textContent = text;
+  }
+}
+
 function setInputs(state) {
   setCurrencyInputValue(elements.price, state.price);
   setDownPaymentInput(state);
@@ -103,23 +136,7 @@ function setInputs(state) {
 }
 
 function attachListeners(state) {
-  if (elements.price) {
-    elements.price.addEventListener('input', () => {
-      updateStateFromInputs(state);
-      calculate(state);
-      saveState(state);
-    });
-  }
-
-  if (elements.downPayment) {
-    elements.downPayment.addEventListener('input', () => {
-      updateStateFromInputs(state);
-      calculate(state);
-      saveState(state);
-    });
-  }
-
-  ['monthlyRate', 'months'].forEach((id) => {
+  ['price', 'downPayment', 'months'].forEach((id) => {
     if (!elements[id]) return;
     elements[id].addEventListener('input', () => {
       updateStateFromInputs(state);
@@ -127,14 +144,6 @@ function attachListeners(state) {
       saveState(state);
     });
   });
-
-  if (elements.extraFees) {
-    elements.extraFees.addEventListener('input', () => {
-      updateStateFromInputs(state);
-      calculate(state);
-      saveState(state);
-    });
-  }
 
   if (elements.method) {
     elements.method.addEventListener('change', () => {
